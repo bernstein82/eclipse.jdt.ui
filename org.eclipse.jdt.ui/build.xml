@@ -1,0 +1,557 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="org.eclipse.jdt.ui" default="build.jars" basedir=".">
+
+	<property name="p2.build.repo" value="file:${buildDirectory}/buildRepo"/>
+	<property name="basews" value="${ws}"/>
+	<property name="baseos" value="${os}"/>
+	<property name="basearch" value="${arch}"/>
+	<property name="basenl" value="${nl}"/>
+	<property name="bundleId" value="org.eclipse.jdt.ui"/>
+	<property name="bundleVersion" value="3.12.0.201507270148"/>
+	<property name="p2.publishonerror" value="false"/>
+
+	<available property="customBuildCallbacks" file="./customBuildCallbacks.xml" value="customBuildCallbacks.xml"/>
+
+	<!-- Compiler settings. -->
+	<property name="javacFailOnError" value="false"/>
+	<property name="javacDebugInfo" value="on"/>
+	<property name="javacVerbose" value="false"/>
+	<property name="logExtension" value=".log"/>
+	<property name="compilerArg" value=""/>
+	<property name="compilation.prereq.log" value="${buildDirectory}/prereqErrors.log"/>
+	<property name="javacSource" value="1.3"/>
+	<property name="javacTarget" value="1.2"/>
+	<condition property="dir_bootclasspath" value="${java.home}/../Classes">
+		<and>
+			<os family="mac"/>
+			<available file="${java.home}/../Classes" type="dir"/>
+		</and>
+	</condition>
+	<property name="dir_bootclasspath" value="${java.home}/lib"/>
+	<path id="path_bootclasspath">
+		<fileset dir="${dir_bootclasspath}">
+			<include name="*.jar"/>
+		</fileset>
+	</path>
+	<property name="bootclasspath" refid="path_bootclasspath"/>
+	<condition property="bundleBootClasspath" value="${JavaSE-1.7}"	>
+		<isset property="JavaSE-1.7"/>
+	</condition>
+	<condition property="bundleJavacSource" value="1.7"	>
+		<isset property="JavaSE-1.7"/>
+	</condition>
+	<condition property="bundleJavacTarget" value="1.7"	>
+		<isset property="JavaSE-1.7"/>
+	</condition>
+	<property name="bundleJavacSource" value="${javacSource}"/>
+	<property name="bundleJavacTarget" value="${javacTarget}"/>
+	<property name="bundleBootClasspath" value="${bootclasspath}"/>
+
+	<target name="init" depends="properties">
+		<condition property="pluginTemp" value="${buildTempFolder}/plugins"		>
+			<isset property="buildTempFolder"/>
+		</condition>
+		<property name="pluginTemp" value="${basedir}"/>
+		<condition property="build.result.folder" value="${pluginTemp}/org.eclipse.jdt.ui_3.12.0.201507270148"		>
+			<isset property="buildTempFolder"/>
+		</condition>
+		<property name="build.result.folder" value="${basedir}"/>
+		<property name="temp.folder" value="${basedir}/temp.folder"/>
+		<property name="plugin.destination" value="${basedir}"/>
+		<condition property="p2.publish.parts" value="true"		>
+			<istrue value="${p2.gathering}"/>
+		</condition>
+		<property name="compilation.problem.marker" value="${build.result.folder}/compilation.problem"/>
+		<condition property="compilation.problem.marker.exists" value="true"		>
+			<and>
+			<available file="${compilation.problem.marker}"/>
+			<isfalse value="${p2.publishonerror}"/>
+			</and>
+		</condition>
+	</target>
+
+	<target name="properties" if="eclipse.running">
+		<property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+
+	</target>
+
+	<target name="build.update.jar" depends="init" description="Build the plug-in: org.eclipse.jdt.ui for an update site.">
+		<delete dir="${temp.folder}"/>
+		<mkdir dir="${temp.folder}"/>
+		<antcall target="build.jars"/>
+		<antcall target="gather.bin.parts">
+			<param name="destination.temp.folder" value="${temp.folder}/"/>
+		</antcall>
+		<jar destfile="${plugin.destination}/org.eclipse.jdt.ui_3.12.0.201507270148.jar" basedir="${temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148" filesetmanifest="merge"/>
+		<delete dir="${temp.folder}"/>
+	</target>
+
+	<target name="@dot.nestedJars">
+		<mkdir dir="${buildDirectory}/nestedJars/com.ibm.icu_54.1.1.v201501272100"/>
+		<unzip src="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/com.ibm.icu_54.1.1.v201501272100.jar" dest="${buildDirectory}/nestedJars/com.ibm.icu_54.1.1.v201501272100" overwrite="false">
+			<patternset includes="icu-data.jar"/>
+		</unzip>
+		<mkdir dir="${buildDirectory}/nestedJars/org.eclipse.equinox.registry_3.6.100.v20150715-1528"/>
+		<unzip src="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.registry_3.6.100.v20150715-1528.jar" dest="${buildDirectory}/nestedJars/org.eclipse.equinox.registry_3.6.100.v20150715-1528" overwrite="false">
+			<patternset includes="runtime_registry_compatibility.jar"/>
+		</unzip>
+		<mkdir dir="${buildDirectory}/nestedJars/org.eclipse.e4.core.services_2.0.0.v20150403-1912"/>
+		<unzip src="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.core.services_2.0.0.v20150403-1912.jar" dest="${buildDirectory}/nestedJars/org.eclipse.e4.core.services_2.0.0.v20150403-1912" overwrite="false">
+			<patternset includes="injection_annotations.jar"/>
+		</unzip>
+	</target>
+	<target name="@dot" depends="init,@dot.nestedJars" unless="@dot" description="Create jar: org.eclipse.jdt.ui @dot.">
+		<delete dir="${build.result.folder}/@dot"/>
+		<mkdir dir="${build.result.folder}/@dot"/>
+		<path id="@dot.classpath">
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.help_3.6.0.v20130326-1254.jar"/>
+			<pathelement path="${buildDirectory}/nestedJars/com.ibm.icu_54.1.1.v201501272100/icu-data.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/com.ibm.icu_54.1.1.v201501272100.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.osgi_3.10.200.v20150709-1605.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.osgi.compatibility.state_1.0.100.v20150709-1617.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.runtime_3.11.0.v20150713-1043.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/javax.annotation_1.2.0.v201401042248.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/javax.inject_1.0.0.v20091030.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.common_3.7.0.v20150402-1709.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.jobs_3.7.0.v20150330-2103.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.runtime.compatibility.registry_3.6.0.v20150318-1505/runtime_registry_compatibility.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.runtime.compatibility.registry_3.6.0.v20150318-1505"/>
+			<pathelement path="${buildDirectory}/nestedJars/org.eclipse.equinox.registry_3.6.100.v20150715-1528/runtime_registry_compatibility.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.registry_3.6.100.v20150715-1528.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.preferences_3.5.300.v20150408-1437.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.contenttype_3.5.0.v20150625-1851.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.app_1.3.400.v20150715-1528.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.osgi.services_3.5.0.v20150714-1510.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/javax.servlet_3.1.0.v201410161800.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.expressions_3.5.0.v20150421-2214.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.filesystem_1.5.0.v20150720-1406.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.filesystem.java7_1.0.100.v20150423-0754.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.filesystem.macosx_1.3.0.v20140124-1940.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.resources_3.11.0.v20150716-1023.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ant.core_3.4.0.v20150428-1928.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.variables_3.2.800.v20130819-1716.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.jdt.core_3.12.0.v20150720-0725.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.jdt.compiler.apt_1.2.0.v20150720-1906.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.jdt.compiler.tool_1.1.0.v20150513-2007.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.text_3.5.400.v20150505-1044.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.commands_3.7.0.v20150422-0725.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.team.core_3.7.100.v20150203-1452.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.compare.core_3.5.500.v20150505-1058.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.search_3.10.100.v20150713-1253.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.filebuffers_3.5.500.v20140723-1040.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ui_3.107.0.v20150714-0947.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ui.cocoa_1.1.100.v20150315-1253.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.swt_3.104.0.v20150721-0751.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.swt.cocoa.macosx.x86_64_3.104.0.v20150721-0751.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.jface_3.11.0.v20150715-0651.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.bidi_0.10.100.v20150715-1528.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ui.workbench_3.107.0.v20150717-1527.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.core.commands_0.11.0.v20150422-0725.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.core.contexts_1.4.0.v20150712-0330.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.core.di_1.5.0.v20150625-1851.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.core.di.annotations_1.4.0.v20150528-1451.jar"/>
+			<pathelement path="${buildDirectory}/nestedJars/org.eclipse.e4.core.services_2.0.0.v20150403-1912/injection_annotations.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.core.services_2.0.0.v20150403-1912.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.workbench_1.3.0.v20150717-0312.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.model.workbench_1.1.100.v20150407-1430.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.emf.ecore_2.11.0.v20150512-0501.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.emf.common_2.11.0.v20150512-0501.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.emf.xpath_0.1.100.v20150513-0856.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.apache.commons.jxpath_1.3.0.v200911051830.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.services_1.2.0.v20150422-0725.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/javax.xml_1.3.4.v201005080400.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.di_1.1.0.v20150422-0725.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.core.di.extensions_0.13.0.v20150717-1502.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.emf.ecore.change_2.11.0.v20150512-0501.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.emf.ecore.xmi_2.11.0.v20150512-0501.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.workbench.renderers.swt_0.13.0.v20150716-1958.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.workbench.renderers.swt.cocoa_0.11.300.v20150507-1945.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.workbench.swt_0.13.0.v20150717-0900.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.databinding_1.5.0.v20150629-0843.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.databinding.observable_1.6.0.v20150717-1755.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.core.databinding.property_1.5.0.v20150422-0725.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.jface.databinding_1.7.0.v20150406-2148.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.css.core_0.11.0.v20150713-1957.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.w3c.css.sac_1.3.1.v200903091627.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.apache.batik.css_1.7.0.v201011041433.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.w3c.dom.events_3.0.0.draft20060413_v201105210656.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.w3c.dom.svg_1.1.0.v201011041433.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.w3c.dom.smil_1.0.1.v200903091627.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.apache.batik.util_1.7.0.v201011041433.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.apache.batik.util.gui_1.7.0.v200903091627.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.css.swt_0.12.0.v20150715-0651.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.bindings_0.11.0.v20150422-0725.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.workbench3_0.13.0.v20150422-0725.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.css.swt.theme_0.10.0.v20150422-0725.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.widgets_1.1.0.v20150427-1751.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.ds_1.4.300.v20150423-1356.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.util_1.0.500.v20130404-1337.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.event_1.3.200.v20150701-1512.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.e4.ui.workbench.addons.swt_1.2.0.v20150512-1414.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ui.ide_3.11.100.v20150705-1745.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ui.views_3.8.0.v20150422-0725.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.jface.text_3.10.0.v20150604-1025.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ui.forms_3.6.200.v20150629-0843.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.p2.engine_2.4.0.v20150511-1532.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.p2.core_2.4.0.v20150527-1706.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.p2.metadata_2.3.0.v20150511-1532.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.p2.metadata.repository_1.2.200.v20150428-1613.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.p2.repository_2.3.100.v20150428-1613.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.security_1.2.200.v20150715-1528.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.equinox.security.macosx_1.100.200.v20130327-1442.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.tukaani.xz_1.3.0.v201308270617.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ui.workbench.texteditor_3.9.100.v20141023-1946.jar"/>
+			<pathelement path="../org.eclipse.ltk.core.refactoring/bin"/>
+			<pathelement path="../org.eclipse.ltk.core.refactoring/@dot"/>
+			<pathelement path="../org.eclipse.ltk.ui.refactoring/bin"/>
+			<pathelement path="../org.eclipse.ltk.ui.refactoring/@dot"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ui.navigator_3.6.0.v20150714-2318.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.compare_3.5.600.v20150420-1449.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ui.editors_3.9.0.v20150213-1939.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.team.ui_3.7.200.v20150203-1452.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.debug.core_3.10.0.v20150303-1130.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.debug.ui_3.11.100.v20150709-1012.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ui.console_3.6.0.v20150512-1341.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.jdt.launching_3.8.0.v20150527-0946.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.jdt.debug_3.9.0.v20150528-1838/jdi.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.jdt.debug_3.9.0.v20150528-1838/jdimodel.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.jdt.debug_3.9.0.v20150528-1838/tools.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ui.navigator.resources_3.5.0.v20150717-1710.jar"/>
+			<pathelement path="../../../../../../Applications/Eclipse-SDK.app/Contents/Eclipse/plugins/org.eclipse.ui.views.properties.tabbed_3.6.100.v20150423-0822.jar"/>
+			<pathelement path="../org.eclipse.jdt.core.manipulation/bin"/>
+			<pathelement path="../org.eclipse.jdt.core.manipulation/@dot"/>
+		</path>
+		<subant antfile="${customBuildCallbacks}" target="pre.@dot" failonerror="false" buildpath=".">
+			<property name="source.folder5" value="internal compatibility/"/>
+			<property name="source.folder1" value="core refactoring/"/>
+			<property name="target.folder" value="${build.result.folder}/@dot"/>
+			<property name="source.folder2" value="ui/"/>
+			<property name="source.folder3" value="ui refactoring/"/>
+			<property name="source.folder4" value="core extension/"/>
+			<reference refid="@dot.classpath"/>
+		</subant>
+		<!-- compile the source code -->
+		<javac destdir="${build.result.folder}/@dot" failonerror="${javacFailOnError}" verbose="${javacVerbose}" debug="${javacDebugInfo}" includeAntRuntime="no" bootclasspath="${bundleBootClasspath}" source="${bundleJavacSource}" target="${bundleJavacTarget}"		>
+			<compilerarg line="${compilerArg}" compiler="${build.compiler}"/>
+			<classpath refid="@dot.classpath" />
+			<src path="core refactoring/"			/>
+			<src path="ui/"			/>
+			<src path="ui refactoring/"			/>
+			<src path="core extension/"			/>
+			<src path="internal compatibility/"			/>
+			<compilerarg value="@${basedir}/javaCompiler...args" compiler="org.eclipse.jdt.core.JDTCompilerAdapter"			/>
+			<compilerarg line="-log &apos;${build.result.folder}/@dot${logExtension}&apos;" compiler="org.eclipse.jdt.core.JDTCompilerAdapter"			/>
+		</javac>
+		<antcall target="checkCompilationResults"/>
+		<!-- Copy necessary resources -->
+		<copy todir="${build.result.folder}/@dot" failonerror="true" overwrite="false">
+			<fileset dir="core refactoring/">
+				<exclude name="**/*.java"/>
+				<exclude name="**/package.htm*"/>
+			</fileset>
+			<fileset dir="ui/">
+				<exclude name="**/*.java"/>
+				<exclude name="**/package.htm*"/>
+			</fileset>
+			<fileset dir="ui refactoring/">
+				<exclude name="**/*.java"/>
+				<exclude name="**/package.htm*"/>
+			</fileset>
+			<fileset dir="core extension/">
+				<exclude name="**/*.java"/>
+				<exclude name="**/package.htm*"/>
+			</fileset>
+			<fileset dir="internal compatibility/">
+				<exclude name="**/*.java"/>
+				<exclude name="**/package.htm*"/>
+			</fileset>
+		</copy>
+		<subant antfile="${customBuildCallbacks}" target="post.compile.@dot" failonerror="false" buildpath=".">
+			<property name="source.folder5" value="internal compatibility/"/>
+			<property name="source.folder1" value="core refactoring/"/>
+			<property name="target.folder" value="${build.result.folder}/@dot"/>
+			<property name="source.folder2" value="ui/"/>
+			<property name="source.folder3" value="ui refactoring/"/>
+			<property name="source.folder4" value="core extension/"/>
+			<reference refid="@dot.classpath"/>
+		</subant>
+		<subant antfile="${customBuildCallbacks}" target="post.@dot" failonerror="false" buildpath=".">
+			<property name="jar.Location" value="${build.result.folder}/@dot"/>
+			<reference refid="@dot.classpath"/>
+		</subant>
+	</target>
+
+	<target name="src.zip" depends="init" unless="src.zip">
+		<mkdir dir="${build.result.folder}"/>
+		<antcall target="zip.src.zip"/>
+	</target>
+	<target name="zip.src.zip">
+		<zip destfile="${build.result.folder}/src.zip" filesonly="false" whenempty="skip" update="false">
+			<fileset dir="core refactoring/">
+				<include name="**/*.java"/>
+			</fileset>
+			<fileset dir="ui/">
+				<include name="**/*.java"/>
+			</fileset>
+			<fileset dir="ui refactoring/">
+				<include name="**/*.java"/>
+			</fileset>
+			<fileset dir="core extension/">
+				<include name="**/*.java"/>
+			</fileset>
+			<fileset dir="internal compatibility/">
+				<include name="**/*.java"/>
+			</fileset>
+		</zip>
+	</target>
+	<target name="copy.src.zip">
+		<copy todir="${source.destination.folder}/" failonerror="true" overwrite="true">
+			<fileset dir="core refactoring/">
+				<include name="**/*.java"/>
+			</fileset>
+			<fileset dir="ui/">
+				<include name="**/*.java"/>
+			</fileset>
+			<fileset dir="ui refactoring/">
+				<include name="**/*.java"/>
+			</fileset>
+			<fileset dir="core extension/">
+				<include name="**/*.java"/>
+			</fileset>
+			<fileset dir="internal compatibility/">
+				<include name="**/*.java"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="build.jars" depends="init" description="Compile classes and build nested jars for the plug-in: org.eclipse.jdt.ui.">
+		<delete file="${compilation.problem.marker}" quiet="true"/>
+		<subant antfile="${customBuildCallbacks}" target="pre.build.jars" failonerror="false" buildpath=".">
+			<property name="build.result.folder" value="${build.result.folder}"/>
+		</subant>
+		<available property="@dot" file="${build.result.folder}/@dot"/>
+		<antcall target="@dot"/>
+		<subant antfile="${customBuildCallbacks}" target="post.build.jars" failonerror="false" buildpath=".">
+			<property name="build.result.folder" value="${build.result.folder}"/>
+		</subant>
+	</target>
+
+	<target name="checkCompilationResults" if="compilation.error.occured">
+		<echo file="${compilation.problem.marker}" message="org.eclipse.jdt.ui_3.12.0.201507270148${line.separator}compilation.error.occured=${compilation.error.occured}"/>
+		<eclipse.logCompileError log="${compilation.prereq.log}" bundle="org.eclipse.jdt.ui_3.12.0.201507270148">
+			<include name="/Users/bernstein/workspace/foreign/eclipse.jdt.ui/org.eclipse.ltk.ui.refactoring/compilation.problem"/>
+			<include name="${pluginTemp}/org.eclipse.ltk.ui.refactoring_3.9.0.201507270148/compilation.problem"/>
+			<include name="/Users/bernstein/workspace/foreign/eclipse.jdt.ui/org.eclipse.ltk.core.refactoring/compilation.problem"/>
+			<include name="${pluginTemp}/org.eclipse.ltk.core.refactoring_3.7.0.201507270148/compilation.problem"/>
+			<include name="/Users/bernstein/workspace/foreign/eclipse.jdt.ui/org.eclipse.jdt.core.manipulation/compilation.problem"/>
+			<include name="${pluginTemp}/org.eclipse.jdt.core.manipulation_1.7.0.201507270148/compilation.problem"/>
+		</eclipse.logCompileError>
+	</target>
+
+	<target name="build.sources" depends="init">
+		<subant antfile="${customBuildCallbacks}" target="pre.build.sources" failonerror="false" buildpath=".">
+			<property name="build.result.folder" value="${build.result.folder}"/>
+		</subant>
+		<available property="src.zip" file="${build.result.folder}/src.zip"/>
+		<antcall target="src.zip"/>
+		<subant antfile="${customBuildCallbacks}" target="post.build.sources" failonerror="false" buildpath=".">
+			<property name="build.result.folder" value="${build.result.folder}"/>
+		</subant>
+	</target>
+
+	<target name="publish.bin.parts" depends="init" if="p2.publish.parts" unless="compilation.problem.marker.exists">
+		<mkdir dir="${build.result.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+		<subant antfile="${customBuildCallbacks}" target="pre.gather.bin.parts" failonerror="false" buildpath=".">
+			<property name="target.folder" value="${build.result.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+			<property name="build.result.folder" value="${build.result.folder}"/>
+		</subant>
+		<copy todir="${build.result.folder}/org.eclipse.jdt.ui_3.12.0.201507270148" failonerror="true" overwrite="false">
+			<fileset dir="${build.result.folder}/@dot">
+				<include name="**"/>
+			</fileset>
+		</copy>
+		<copy todir="${build.result.folder}/org.eclipse.jdt.ui_3.12.0.201507270148" failonerror="true" overwrite="true">
+			<fileset dir="${basedir}">
+				<include name="plugin.xml"/>
+				<include name="about.html"/>
+				<include name=".options"/>
+				<include name="JavadocHoverStyleSheet.css"/>
+				<include name="JavadocViewStyleSheet.css"/>
+				<include name="icons/"/>
+				<include name="templates/"/>
+				<include name="plugin.properties"/>
+				<include name="META-INF/"/>
+				<include name="dictionaries/"/>
+				<include name="about_files/"/>
+				<include name="jar-in-jar-loader.zip"/>
+				<include name="css/"/>
+			</fileset>
+		</copy>
+		<eclipse.versionReplacer path="${build.result.folder}/org.eclipse.jdt.ui_3.12.0.201507270148" version="3.12.0.201507270148"/>
+		<antcall target="apitools.generation">
+			<param name="projectLocation" value="${basedir}"/>
+			<param name="binary.folders" value="${build.result.folder}/@dot"/>
+			<param name="projectName" value="${bundleId}_${bundleVersion}"/>
+			<param name="target.folder" value="${build.result.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+		</antcall>
+		<subant antfile="${customBuildCallbacks}" target="post.gather.bin.parts" failonerror="false" buildpath=".">
+			<property name="target.folder" value="${build.result.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+			<property name="build.result.folder" value="${build.result.folder}"/>
+		</subant>
+		<eclipse.gatherBundle 
+		   metadataRepository="${p2.build.repo}"
+		   artifactRepository="${p2.build.repo}"
+		   buildResultFolder="${build.result.folder}"
+		   targetFolder="${build.result.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"
+		/>
+	</target>
+
+	<target name="gather.bin.parts" depends="init" if="destination.temp.folder">
+		<mkdir dir="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+		<subant antfile="${customBuildCallbacks}" target="pre.gather.bin.parts" failonerror="false" buildpath=".">
+			<property name="target.folder" value="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+			<property name="build.result.folder" value="${build.result.folder}"/>
+		</subant>
+		<copy todir="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148" failonerror="true" overwrite="false">
+			<fileset dir="${build.result.folder}/@dot">
+				<include name="**"/>
+			</fileset>
+		</copy>
+		<copy todir="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148" failonerror="true" overwrite="true">
+			<fileset dir="${basedir}">
+				<include name="plugin.xml"/>
+				<include name="about.html"/>
+				<include name=".options"/>
+				<include name="JavadocHoverStyleSheet.css"/>
+				<include name="JavadocViewStyleSheet.css"/>
+				<include name="icons/"/>
+				<include name="templates/"/>
+				<include name="plugin.properties"/>
+				<include name="META-INF/"/>
+				<include name="dictionaries/"/>
+				<include name="about_files/"/>
+				<include name="jar-in-jar-loader.zip"/>
+				<include name="css/"/>
+			</fileset>
+		</copy>
+		<eclipse.versionReplacer path="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148" version="3.12.0.201507270148"/>
+		<antcall target="apitools.generation">
+			<param name="projectLocation" value="${basedir}"/>
+			<param name="binary.folders" value="${build.result.folder}/@dot"/>
+			<param name="projectName" value="${bundleId}_${bundleVersion}"/>
+			<param name="target.folder" value="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+		</antcall>
+		<subant antfile="${customBuildCallbacks}" target="post.gather.bin.parts" failonerror="false" buildpath=".">
+			<property name="target.folder" value="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+			<property name="build.result.folder" value="${build.result.folder}"/>
+		</subant>
+	</target>
+
+	<target name="build.zips" depends="init">
+	</target>
+
+	<target name="gather.sources" depends="init" if="destination.temp.folder">
+		<subant antfile="${customBuildCallbacks}" target="pre.gather.sources" failonerror="false" buildpath=".">
+			<property name="target.folder" value="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+		</subant>
+		<mkdir dir="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+		<copy file="${build.result.folder}/src.zip" todir="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148" failonerror="false" overwrite="false"/>
+		<antcall target="copy.src.includes">
+			<param name="source.destination.folder" value="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+		</antcall>
+		<subant antfile="${customBuildCallbacks}" target="post.gather.sources" failonerror="false" buildpath=".">
+			<property name="target.folder" value="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+		</subant>
+	</target>
+
+	<target name="gather.individual.sources" depends="init">
+		<subant antfile="${customBuildCallbacks}" target="pre.gather.sources" failonerror="false" buildpath=".">
+			<property name="target.folder" value="${destination.temp.folder}"/>
+		</subant>
+		<antcall target="copy.src.zip">
+			<param name="source.destination.folder" value="${destination.temp.folder}"/>
+		</antcall>
+		<antcall target="copy.src.includes">
+			<param name="source.destination.folder" value="${destination.temp.folder}"/>
+		</antcall>
+		<subant antfile="${customBuildCallbacks}" target="post.gather.sources" failonerror="false" buildpath=".">
+			<property name="target.folder" value="${destination.temp.folder}"/>
+		</subant>
+	</target>
+
+	<target name="copy.src.includes" depends="init">
+		<copy todir="${source.destination.folder}" failonerror="false" overwrite="false">
+			<fileset dir="${basedir}">
+				<include name="about.html"/>
+				<include name="schema/"/>
+				<include name="dictionaries/"/>
+				<include name="about_files/"/>
+				<exclude name="jar in jar loader/"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="gather.logs" depends="init" if="destination.temp.folder">
+		<subant antfile="${customBuildCallbacks}" target="pre.gather.logs" failonerror="false" buildpath=".">
+			<property name="destination.temp.folder" value="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+		</subant>
+		<mkdir dir="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+		<copy todir="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148" failonerror="false" overwrite="false">
+			<fileset dir="${build.result.folder}">
+				<include name="@dot${logExtension}"/>
+			</fileset>
+		</copy>
+		<subant antfile="${customBuildCallbacks}" target="post.gather.logs" failonerror="false" buildpath=".">
+			<property name="destination.temp.folder" value="${destination.temp.folder}/org.eclipse.jdt.ui_3.12.0.201507270148"/>
+		</subant>
+	</target>
+
+	<target name="clean" depends="init" description="Clean the plug-in: org.eclipse.jdt.ui of all the zips, jars and logs created.">
+		<subant antfile="${customBuildCallbacks}" target="pre.clean" failonerror="false" buildpath=".">
+			<property name="temp.folder" value="${temp.folder}"/>
+			<property name="build.result.folder" value="${build.result.folder}"/>
+			<property name="plugin.destination" value="${plugin.destination}"/>
+		</subant>
+		<delete dir="${build.result.folder}/@dot"/>
+		<delete file="${build.result.folder}/src.zip"/>
+		<delete file="${plugin.destination}/org.eclipse.jdt.ui_3.12.0.201507270148.jar"/>
+		<delete file="${plugin.destination}/org.eclipse.jdt.ui_3.12.0.201507270148.zip"/>
+		<delete dir="${temp.folder}"/>
+		<delete file="${compilation.problem.marker}" quiet="true"/>
+		<subant antfile="${customBuildCallbacks}" target="post.clean" failonerror="false" buildpath=".">
+			<property name="temp.folder" value="${temp.folder}"/>
+			<property name="build.result.folder" value="${build.result.folder}"/>
+			<property name="plugin.destination" value="${plugin.destination}"/>
+		</subant>
+	</target>
+
+	<target name="refresh" depends="init" if="eclipse.running" description="Refresh this folder.">
+		<eclipse.convertPath fileSystemPath="/Users/bernstein/workspace/foreign/eclipse.jdt.ui/org.eclipse.jdt.ui" property="resourcePath"/>
+		<eclipse.refreshLocal resource="${resourcePath}" depth="infinite"/>
+	</target>
+
+	<target name="zip.plugin" depends="init" description="Create a zip containing all the elements for the plug-in: org.eclipse.jdt.ui.">
+		<delete dir="${temp.folder}"/>
+		<mkdir dir="${temp.folder}"/>
+		<antcall target="build.jars"/>
+		<antcall target="build.sources"/>
+		<antcall target="gather.bin.parts">
+			<param name="destination.temp.folder" value="${temp.folder}/"/>
+		</antcall>
+		<antcall target="gather.sources">
+			<param name="destination.temp.folder" value="${temp.folder}/"/>
+		</antcall>
+		<delete>
+			<fileset dir="${temp.folder}">
+				<include name="**/*.bin${logExtension}"/>
+			</fileset>
+		</delete>
+		<zip destfile="${plugin.destination}/org.eclipse.jdt.ui_3.12.0.201507270148.zip" basedir="${temp.folder}" filesonly="true" whenempty="skip" update="false"/>
+		<delete dir="${temp.folder}"/>
+	</target>
+
+	<target name="apitools.generation" if="generateAPIDescription">
+		<apitooling.apigeneration  projectName="${projectName}" project="${projectLocation}" binary="${binary.folders}" target="${target.folder}" extramanifests="${extraManifests}" allownonapiproject="${allowNonApiProject}"		/>
+	</target>
+
+</project>

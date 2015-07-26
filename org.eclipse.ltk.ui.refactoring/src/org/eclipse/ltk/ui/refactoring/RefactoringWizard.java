@@ -613,6 +613,7 @@ public abstract class RefactoringWizard extends Wizard {
 	 * @return the created change
 	 *
 	 * @noreference This method is not intended to be referenced by clients.
+	 * @since 3.9
 	 */
 	public final Change internalCreateChange(InternalAPI api, CreateChangeOperation operation, boolean updateStatus) {
 		Assert.isNotNull(api);
