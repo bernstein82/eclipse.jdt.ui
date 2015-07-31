@@ -23,6 +23,7 @@ import org.eclipse.help.IContextProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
@@ -61,6 +62,7 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeViewerListener;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.TreeExpansionEvent;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.ViewerFilter;
@@ -104,6 +106,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
@@ -593,7 +596,39 @@ public class PackageExplorerPart extends ViewPart
 
 		fLabelProvider= createLabelProvider();
 		fLabelProvider.setIsFlatLayout(fIsCurrentLayoutFlat);
-		fDecoratingLabelProvider= new DecoratingJavaLabelProvider(fLabelProvider, false, fIsCurrentLayoutFlat);
+		fDecoratingLabelProvider= new DecoratingJavaLabelProvider(fLabelProvider, false, fIsCurrentLayoutFlat) {
+
+			// TODO add a toggle for this
+			// TODO move "ShowMembers" from Pref>Java>Appearance to Control
+			// TODO add more prefs: hide non-public, hide fields, hide static 
+			@Override
+			public StyledString getStyledText(Object element) {
+				return super.getStyledText(getRootType(element));
+			}
+			@Override
+			public Image getImage(Object element) {
+				return super.getImage(getRootType(element));
+			}
+			
+			private Object getRootType(Object element) {
+				if (element instanceof ITypeRoot) {
+					try {
+						IJavaElement[] children= ((ITypeRoot)element).getChildren();
+						IType type = null;
+						for (IJavaElement e : children)
+							if (e instanceof IType)
+								if (type == null)
+									type = (IType) e;
+								else
+									return element;
+						return type != null ? type : element;
+					} catch (JavaModelException e1) {
+						return element;
+					}
+				}
+				return element;
+			}			
+		};
 		fViewer.setLabelProvider(fDecoratingLabelProvider);
 		// problem decoration provided by PackageLabelProvider
 	}

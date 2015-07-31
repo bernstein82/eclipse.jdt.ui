@@ -49,8 +49,6 @@ import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.IParent;
-import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
@@ -251,45 +249,22 @@ public class PackageExplorerContentProvider extends StandardJavaElementContentPr
 	@Override
 	protected Object[] getPackageContent(IPackageFragment fragment) throws JavaModelException {
 		if (fIsFlatLayout) {
-			return getPackageContents(fragment);
+			return super.getPackageContent(fragment);
 		}
 
 		// hierarchical package mode
 		ArrayList<Object> result= new ArrayList<Object>();
 
 		getHierarchicalPackageChildren((IPackageFragmentRoot) fragment.getParent(), fragment, result);
-		Object[] nonPackages= getPackageContents(fragment);
+		Object[] nonPackages= super.getPackageContent(fragment);
 		if (result.isEmpty())
 			return nonPackages;
 		for (int i= 0; i < nonPackages.length; i++) {
-			//result.add(nonPackages[i]);
+			result.add(nonPackages[i]);
 		}
 		return result.toArray();
 	}
 	
-	/**
-	 * Evaluates all children of a given IPackageFragment.
-	 * 
-	 * @param fragment the fragment to evaluate the children for.
-	 * @return the children of the given package fragment.
-	 * @throws JavaModelException if the package fragment does not exist or if an exception occurs while accessing its corresponding resource
-	 */
-	private Object[] getPackageContents(IPackageFragment fragment) throws JavaModelException {
-		if (!getProvideMembers())
-			return super.getPackageContent(fragment);
-		
-		Object[] result = new Object[0];
-		for (Object element : super.getPackageContent(fragment)) {
-			if (element instanceof ISourceReference && element instanceof IParent) {
-				Object[] types = ((IParent)element).getChildren();
-				result = concatenate(result, types);
-			} else {
-				result = concatenate(result, new Object[] {element});
-			}
-		}
-		return result;
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.ui.StandardJavaElementContentProvider#getFolderContent(org.eclipse.core.resources.IFolder)
 	 */
@@ -328,11 +303,24 @@ public class PackageExplorerContentProvider extends StandardJavaElementContentPr
 					return project.members();
 				return NO_CHILDREN;
 			}
-
+			if (getProvideMembers() && parentElement instanceof ITypeRoot) {
+				return getSourceElements((ITypeRoot)parentElement);
+			}
 			return super.getChildren(parentElement);
 		} catch (CoreException e) {
 			return NO_CHILDREN;
 		}
+	}
+	public Object[] getSourceElements(ITypeRoot element) throws JavaModelException {
+		IJavaElement[] children = element.getChildren();
+		IType type = null;
+		for (IJavaElement e : children)
+			if (e instanceof IType)
+				if (type == null)
+					type = (IType) e;
+				else
+					return children;
+		return type != null ? type.getChildren() : children;
 	}
 
 	/* (non-Javadoc)
