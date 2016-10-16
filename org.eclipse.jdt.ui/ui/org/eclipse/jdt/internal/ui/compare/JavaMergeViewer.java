@@ -585,6 +585,10 @@ public class JavaMergeViewer extends TextMergeViewer {
 		public void createPartControl(Composite composite) {
 			SourceViewer sourceViewer= (SourceViewer)createJavaSourceViewer(composite, new CompositeRuler(), null, false, fTextOrientation | SWT.H_SCROLL | SWT.V_SCROLL, createChainedPreferenceStore(null));
 			setSourceViewer(this, sourceViewer);
+
+			if (isSemanticHighlightingEnabled())
+				installSemanticHighlighting();
+
 			createNavigationActions();
 			getSelectionProvider().addSelectionChangedListener(getSelectionChangedListener());
 		}

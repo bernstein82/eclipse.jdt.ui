@@ -3564,7 +3564,7 @@ public abstract class JavaEditor extends AbstractDecoratedTextEditor implements 
 	 *
 	 * @since 3.0
 	 */
-	private boolean isSemanticHighlightingEnabled() {
+	protected boolean isSemanticHighlightingEnabled() {
 		return SemanticHighlightings.isEnabled(getPreferenceStore());
 	}
 
